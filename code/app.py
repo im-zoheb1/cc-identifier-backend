@@ -1,34 +1,31 @@
 from flask import Flask
 from flask_restful import Resource, Api
-from flask_jwt import JWT, jwt_required
+from flask_jwt import JWT
 
 from security import authenticate, identity
-from resources.user import UserRegister
+from resources.user import UserRegister, UserVerification, User
+
+from config import BaseConfig
 
 app = Flask(__name__)
 
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///data.db'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['PROPAGATE_EXCEPTIONS'] = True
+app.config['SECRET_KEY'] = BaseConfig.SECRET_KEY
+app.config['SQLALCHEMY_DATABASE_URI'] = BaseConfig.DB_PATH
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = BaseConfig.SQLALCHEMY_TRACK_MODIFICATION
+app.config['PROPAGATE_EXCEPTIONS'] = BaseConfig.PROPAGATE_EXCEPTIONS
 
-app.secret_key = 'ccidentifier'
 api = Api(app)
 
 @app.before_first_request
 def create_tables():
     db.create_all()
 
-# JWT creates a ndew endpoint /auth
+# JWT creates a new endpoint /auth
 jwt = JWT(app, authenticate, identity)
  
-# every resource have to be a class
-class CCIdentifier(Resource):
-    @jwt_required
-    def get(self):
-        return {'result': 'this is the result'}
-    
-api.add_resource(CCIdentifier, '/something')
 api.add_resource(UserRegister, '/register')
+api.add_resource(UserVerification, '/confirm/<string:token>')
+api.add_resource(User, '/user/<int:user_id>')
 
 if __name__ == '__main__':
     from db import db

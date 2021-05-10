@@ -1,5 +1,8 @@
 from flask_restful import Resource, reqparse
 from models.user import UserModel
+from common.utils import validate_email, confirm_token, send_confirmation_mail
+
+from passlib.hash import pbkdf2_sha256 # library for the password encryption
 
 class UserRegister(Resource):
     parser = reqparse.RequestParser()
@@ -35,15 +38,60 @@ class UserRegister(Resource):
         if UserModel.find_by_username(data['username']):
             return {"message": "A user with that username already exists"}, 400
         
-        user = UserModel(
-            data['username'], 
-            data['email'], 
-            data['organization'], 
-            data['address'], 
-            data['password']
-        )
-        
-        print(data['username'])
-        user.save_to_db()
+        if validate_email(data['email']):
+            user = UserModel(
+                data['username'], 
+                data['email'], 
+                data['organization'], 
+                data['address'], 
+                pbkdf2_sha256.hash(data['password']), # password encryption
+                confirmed = False
+            )
 
-        return {"message": "User creatted successfully."}, 201
+            send_confirmation_mail(data['email'], data['username'])
+
+            user.save_to_db()
+            
+            return f'A confirmation email has been send to {data["email"]}. Please verify to continue.', 200
+        else:
+            return "Invalid Email", 422
+        return
+    
+    
+class UserVerification(Resource):
+    def get(self, token):
+        try:
+            data = confirm_token(token)
+        except:
+            return 'Authentication token has expired', 401
+
+        user = UserModel.find_by_username(data['username'])
+
+        print('user_token: ', user)
+
+        if user.confirmed:
+            return "Account is already verified", 400
+
+        if user:
+            user.confirmed=True
+            user.save_to_db()
+            return data, 200
+        
+        return 'FAILED: User not found', 404
+
+# endpoint for testing purposes
+class User(Resource):
+    @classmethod
+    def get(cls, user_id):
+        user = UserModel.find_by_id(user_id)
+        if not user:
+            return {'message': 'User not found'}, 404
+        return user.json()
+    
+    @classmethod
+    def delete(cls, user_id):
+        user = UserModel.find_by_id(user_id)
+        if not user:
+            return {'message': 'User not found'}, 404
+        user.delete_from_db()
+        return {'message': 'User deleted.'}, 200

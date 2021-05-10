@@ -9,14 +9,27 @@ class UserModel(db.Model):
     organization = db.Column(db.String(80))
     address = db.Column(db.String(180))
     password = db.Column(db.String(80))
-    
-    def __init__(self, username, email, organization, address, password):
+    confirmed = db.Column(db.Boolean, nullable=False, default=False) # confirming if signup is verified
+
+    def __init__(self, username, email, organization, address, password, confirmed):
         self.username = username
         self.email = email
         self.organization = organization
         self.address = address
         self.password = password
+        self.confirmed = confirmed # confirming if signup is verified
     
+    def json(self):
+        return {
+            'id': self.id,
+            'username': self.username,
+        }
+    
+    def delete_from_db(self):
+        db.session.delete(self)
+        db.session.commit()
+    
+    # saves the user to the database
     def save_to_db(self):
         db.session.add(self)
         db.session.commit()
@@ -27,5 +40,4 @@ class UserModel(db.Model):
 
     @classmethod
     def find_by_id(cls, _id):
-        #d
         return cls.query.filter_by(id=_id).first()
