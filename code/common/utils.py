@@ -46,9 +46,9 @@ def send_mail(email, template):
 	msg = "\r\n".join([
 	  "From: " + _from,
 	  "To: " + email,
-	  "Subject: confirm email",
+	  "Subject: Confirm your CCIdentifier account",
 	  "",
-	  "send for activate account",
+	  "Click the link below to activate your account",
 	  template
 	  ])
 	server = smtplib.SMTP( MAIL_SERVER )
@@ -64,6 +64,6 @@ def send_confirmation_mail(email, username):
     # send confirmation token to the user
 	token = generate_confirmation_token(username)
 	confirm_url = url_for('userverification', token=token, _external=True)
-	html = render_template('confirmation.html', confirm_url=confirm_url)
+	html = render_template('confirmation.html', confirm_url=confirm_url, sending_mail=True)
 	send_mail(email, html)
 	return 
