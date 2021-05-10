@@ -52,9 +52,9 @@ class UserRegister(Resource):
 
             user.save_to_db()
             
-            return f'A confirmation email has been send to {data["email"]}. Please verify to continue.', 200
+            return {'message': f'A confirmation email has been send to {data["email"]}. Please verify to continue.'}, 200
         else:
-            return "Invalid Email", 422
+            return {"message": "Invalid Email"}, 422
         return
     
     
@@ -63,21 +63,21 @@ class UserVerification(Resource):
         try:
             data = confirm_token(token)
         except:
-            return 'Authentication token has expired', 401
+            return {'message': 'Authentication token has expired'}, 401
+
+        print('//////////////////////', data)
 
         user = UserModel.find_by_username(data['username'])
 
-        print('user_token: ', user)
-
         if user.confirmed:
-            return "Account is already verified", 400
+            return {'message': "Account is already verified"}, 400
 
         if user:
             user.confirmed=True
             user.save_to_db()
-            return data, 200
+            return {'message': 'Your account has been verified'}, 200
         
-        return 'FAILED: User not found', 404
+        return {'message': 'FAILED: User not found'}, 404
 
 # endpoint for testing purposes
 class User(Resource):
