@@ -23,6 +23,8 @@ class UserModel(db.Model):
         return {
             'id': self.id,
             'username': self.username,
+            'email': self.email,
+            'confirmed': self.confirmed,
         }
     
     def delete_from_db(self):

@@ -1,8 +1,11 @@
+from passlib.hash import pbkdf2_sha256 # library for the password encryption
 from flask_restful import Resource, reqparse
+from werkzeug.security import safe_str_cmp
+from flask_jwt_extended import create_access_token, create_refresh_token
+
 from models.user import UserModel
 from common.utils import validate_email, confirm_token, send_confirmation_mail
 
-from passlib.hash import pbkdf2_sha256 # library for the password encryption
 
 class UserRegister(Resource):
     parser = reqparse.RequestParser()
@@ -31,7 +34,6 @@ class UserRegister(Resource):
         required=True, 
         help='password cannot be blank'
     )
-    
     def post(self):
         data = UserRegister.parser.parse_args()
         
@@ -95,3 +97,36 @@ class User(Resource):
             return {'message': 'User not found'}, 404
         user.delete_from_db()
         return {'message': 'User deleted.'}, 200
+
+class UserLogin(Resource):
+    parser = reqparse.RequestParser()
+    parser.add_argument('username', 
+        type=str,
+        required=True, 
+        help='username cannot be blank'
+    )
+    parser.add_argument('password', 
+        type=str,
+        required=True, 
+        help='password cannot be blank'
+    )
+    @classmethod
+    def post(cls):
+        # get data from parser
+        data = cls.parser.parse_args()
+
+        # find user in database
+        user = UserModel.find_by_username(data['username'])
+
+        # check password
+        # this is what the authenticate() function used to do 
+        if user and pbkdf2_sha256.verify(data['password'], user.password):
+            # identity= is what the 'identity()' function used to do 
+            access_token = create_access_token(identity=user.id, fresh=True)
+            refresh_token = create_refresh_token(user.id)
+            return {
+                'access_token': access_token,
+                'refresh_token': refresh_token
+            }, 200
+        
+        return {'message': 'Invalid credentials'}, 401
