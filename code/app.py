@@ -18,7 +18,7 @@ api = Api(app)
 def create_tables():
     db.create_all()
 
-# JWT creates a new endpoint /auth
+# JWT creates a ndew endpoint /auth
 jwt = JWT(app, authenticate, identity)
  
 # every resource have to be a class

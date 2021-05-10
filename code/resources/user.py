@@ -46,4 +46,4 @@ class UserRegister(Resource):
         print(data['username'])
         user.save_to_db()
 
-        return {"message": "User created successfully."}, 201
+        return {"message": "User creatted successfully."}, 201
