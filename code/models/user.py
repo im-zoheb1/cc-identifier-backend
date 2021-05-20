@@ -4,12 +4,14 @@ class UserModel(db.Model):
     __tablename__ = 'users'
     
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(80))
-    email = db.Column(db.String(80))
-    organization = db.Column(db.String(80))
-    address = db.Column(db.String(180))
-    password = db.Column(db.String(80))
+    username = db.Column(db.String(80), nullable=False)
+    email = db.Column(db.String(80), nullable=False)
+    organization = db.Column(db.String(80), nullable=False)
+    address = db.Column(db.String(180), nullable=False)
+    password = db.Column(db.String(80), nullable=False)
     confirmed = db.Column(db.Boolean, nullable=False, default=False) # confirming if signup is verified
+
+    patient = db.relationship('PatientModel', backref='user', lazy='dynamic')
 
     def __init__(self, username, email, organization, address, password, confirmed):
         self.username = username

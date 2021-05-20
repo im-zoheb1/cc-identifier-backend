@@ -7,3 +7,6 @@ class BaseConfig():
 
     DB_PATH = 'sqlite:///data.db'
     MAIL_SERVER = 'smtp.gmail.com:587'
+    
+    JWT_BLACKLIST_ENABLED = True
+    JWT_BLACKLIST_TOKEN_CHECKS = ['access', 'refresh']

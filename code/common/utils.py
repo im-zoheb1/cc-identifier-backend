@@ -6,6 +6,10 @@ from itsdangerous import URLSafeTimedSerializer
 from flask import Flask, url_for, render_template
 from config import BaseConfig
 
+import string, random
+
+#######################################################
+########## EMAIL HANDING #############################
 
 SECRET_KEY = BaseConfig.SECRET_KEY
 SALT = BaseConfig.SECURITY_PASSWORD_SALT
@@ -67,3 +71,15 @@ def send_confirmation_mail(email, username):
 	html = render_template('confirmation.html', confirm_url=confirm_url, sending_mail=True)
 	send_mail(email, html)
 	return 
+
+
+#######################################################
+########## RANDOM STRING GENERATOR ####################
+
+def random_string(no_of_char = 20):
+    rand = "".join(random.choices(string.ascii_lowercase + string.digits, k = no_of_char))
+    return str(rand)
+
+#######################################################
+###### CONGENITAL CATARACT CLASSIFIER #################
+
