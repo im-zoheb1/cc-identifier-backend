@@ -1,6 +1,8 @@
 from flask_restful import Resource, reqparse
 from flask_jwt_extended import get_jwt_identity, jwt_required
 from werkzeug.datastructures import FileStorage
+from werkzeug.security import safe_str_cmp
+
 import tensorflow as tf
 from tensorflow import keras
 
@@ -75,9 +77,27 @@ class Classifier(Resource):
                 data['blood_group'], 
                 result = self.cc_identifier(data['image'], image_name), 
                 status = 'pending',
-                user_id = get_jwt_identity()
+                user_id = get_jwt_identity(),
             )
             patient.save_to_db()
 
-            return patient.json(), 200
+            return {"message": "image has successfully been classified"}, 200
         return {"message": "Invalid email address"}, 422
+    
+class Patient(Resource):
+    @jwt_required(refresh=True)
+    def get(self, patient_id):
+        patient = PatientModel.find_by_id(patient_id);
+        
+        # check if the patient does not exists
+        if not(patient):
+            return {"message": "Patient does not exist"}, 404
+            
+        user_id = get_jwt_identity()
+        
+        print(patient.user_id, user_id)
+            
+        if patient.user_id != user_id:
+            return {"message": "You are not authorized to access this record"}, 403
+            
+        return patient.json(), 200 

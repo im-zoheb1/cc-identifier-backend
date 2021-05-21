@@ -29,6 +29,7 @@ class PatientModel(db.Model):
 
     def json(self):
         return {
+            'id': self.id,
             'name': self.name,
             'image': self.image,
             'email': self.email,
@@ -38,8 +39,13 @@ class PatientModel(db.Model):
             'result': self.result,
             'status': self.status,
         }
-        
-    # saves the user to the database
+
+    # SAVES THE USER TO THE DATABASE
     def save_to_db(self):
         db.session.add(self)
         db.session.commit()
+        
+    # GET PATIENT BY ID
+    @classmethod
+    def find_by_id(cls, _id):
+        return cls.query.filter_by(id=_id).first()

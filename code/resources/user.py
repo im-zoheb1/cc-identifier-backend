@@ -44,6 +44,9 @@ class UserRegister(Resource):
         
         if UserModel.find_by_username(data['username']):
             return {"message": "A user with that username already exists"}, 400
+
+        if UserModel.find_by_email(data['email']):
+            return {"message": "This email address is already occupied. Please use a different email_address"}, 400
         
         if validate_email(data['email']):
             user = UserModel(
@@ -63,16 +66,26 @@ class UserRegister(Resource):
         else:
             return {"message": "Invalid Email"}, 422
         return
-    
-    
+
+class ResendConfirmation(Resource):
+    def post(self, username):
+        user = UserModel.find_by_username(username)
+        if user.confirmed:
+            return {"message": "Account is already verified. Please login to continue."}
+        send_confirmation_mail(user.email, user.username)
+        return {"message": f"Confirmation has been been to {user.email}."}, 200
+
+
 class UserVerification(Resource):
     def get(self, token):
-        try:
-            data = confirm_token(token)
-        except:
+        data = confirm_token(token)
+        if not(data):
             return {'message': 'Authentication token has expired'}, 401
 
-        print('//////////////////////', data)
+        # try:
+        #     data = confirm_token(token)
+        # except:
+        #     return {'message': 'Authentication token has expired'}, 401
 
         user = UserModel.find_by_username(data['username'])
 
@@ -126,6 +139,9 @@ class UserLogin(Resource):
 
         # check password
         # this is what the authenticate() function used to do 
+        if not(user.confirmed):
+            return {'message': 'Please verify your account to sign in.', 'error':'unverified-account'}, 403
+        
         if user and pbkdf2_sha256.verify(data['password'], user.password):
             # identity= is what the 'identity()' function used to do 
             access_token = create_access_token(identity=user.id, fresh=True)
@@ -150,3 +166,4 @@ class UserLogout(Resource):
         jti = get_jwt()['jti'] # jti is "JWT ID", a unique identifier for JWT
         BLACKLIST.add(jti)
         return {'message': 'Successfully logged out.'}, 200
+    

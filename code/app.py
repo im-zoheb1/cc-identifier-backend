@@ -6,8 +6,10 @@ from flask_jwt_extended import JWTManager
 from config import BaseConfig
 from blacklist import BLACKLIST
 
+
 from resources.patients import (
-    Classifier
+    Classifier,
+    Patient
 )
 
 from resources.user import (
@@ -16,8 +18,11 @@ from resources.user import (
     UserVerification,
     UserLogin,
     UserLogout, 
-    TokenRefresh
+    TokenRefresh,
+    ResendConfirmation
 )
+
+from resources.prescriptions import Prescription
 
 app = Flask(__name__)
 
@@ -75,8 +80,12 @@ api.add_resource(User, '/user/<int:user_id>')
 api.add_resource(UserLogin, '/login')
 api.add_resource(UserLogout, '/logout')
 api.add_resource(TokenRefresh, '/refresh')
+api.add_resource(ResendConfirmation, '/resend_confirmation/<string:username>')
+
+api.add_resource(Prescription, '/prescription/<int:patient_id>')
 
 api.add_resource(Classifier, '/classifier')
+api.add_resource(Patient, '/patient/<string:patient_id>')
 
 if __name__ == '__main__':
     from db import db

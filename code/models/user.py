@@ -10,7 +10,7 @@ class UserModel(db.Model):
     address = db.Column(db.String(180), nullable=False)
     password = db.Column(db.String(80), nullable=False)
     confirmed = db.Column(db.Boolean, nullable=False, default=False) # confirming if signup is verified
-
+ 
     patient = db.relationship('PatientModel', backref='user', lazy='dynamic')
 
     def __init__(self, username, email, organization, address, password, confirmed):
@@ -41,6 +41,10 @@ class UserModel(db.Model):
     @classmethod
     def find_by_username(cls, username):
         return cls.query.filter_by(username=username).first()
+    
+    @classmethod
+    def find_by_email(cls, email):
+        return cls.query.filter_by(email=email).first()
 
     @classmethod
     def find_by_id(cls, _id):
