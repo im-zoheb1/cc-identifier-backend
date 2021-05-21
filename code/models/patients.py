@@ -1,3 +1,4 @@
+from sqlalchemy.orm import backref, relationship
 from db import db
 
 class PatientModel(db.Model):
@@ -12,8 +13,10 @@ class PatientModel(db.Model):
     blood_group = db.Column(db.String(10), nullable=False)
     result = db.Column(db.String(10), nullable=False)
     status = db.Column(db.String(10), nullable=False, default='pending')
+    
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
 
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    prescription = db.relationship("PrescriptionModel", backref=backref("prescriptions", uselist=False))
 
     def __init__(self, name, image, email, pre_existing_conditions, 
                  age, blood_group, result, status, user_id):
@@ -49,3 +52,7 @@ class PatientModel(db.Model):
     @classmethod
     def find_by_id(cls, _id):
         return cls.query.filter_by(id=_id).first()
+    
+    @classmethod
+    def find_by_status(cls, status):
+        return cls.query.filder_by(status=status).all()

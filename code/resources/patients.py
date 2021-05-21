@@ -85,10 +85,9 @@ class Classifier(Resource):
         return {"message": "Invalid email address"}, 422
     
 class Patient(Resource):
-    @jwt_required(refresh=True)
     def get(self, patient_id):
         patient = PatientModel.find_by_id(patient_id);
-        
+            
         # check if the patient does not exists
         if not(patient):
             return {"message": "Patient does not exist"}, 404
@@ -99,5 +98,14 @@ class Patient(Resource):
             
         if patient.user_id != user_id:
             return {"message": "You are not authorized to access this record"}, 403
-            
-        return patient.json(), 200 
+        
+        try:
+            prescription = patient.prescription[0]
+        except: 
+            return patient.json(), 200 
+        
+        return {
+            **patient.json(), 
+            'suggested_clinic': prescription.clinic, 
+            'prescription': prescription.prescription
+            }

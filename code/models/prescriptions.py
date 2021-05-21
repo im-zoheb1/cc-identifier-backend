@@ -6,7 +6,9 @@ class PrescriptionModel(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     clinic = db.Column(db.String(80), nullable=False)
     prescription = db.Column(db.String, nullable=False)
-    patient_id = db.Column(db.Integer, db.ForeignKey('patients.id'), nullable=False)
+    patient_id = db.Column(db.Integer, db.ForeignKey('patients.id'))
+
+    
 
     def __init__(self, clinic, prescription, patient_id):
         self.clinic = clinic    
@@ -24,7 +26,11 @@ class PrescriptionModel(db.Model):
         db.session.add(self)
         db.session.commit()
 
-    # GET PATIENT BY ID
     @classmethod
     def find_by_id(cls, _id):
         return cls.query.filter_by(id=_id).first()
+    
+    # GET PATIENT BY ID
+    @classmethod
+    def find_by_patient_id(cls, _id):
+        return cls.query.filter_by(patient_id=_id).first()
