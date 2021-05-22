@@ -200,6 +200,9 @@ class UserLogin(Resource):
         # find user in database
         user = UserModel.find_by_username(data['username'])
 
+        if(not(user)):
+            return {'message': 'This user does not exists'}, 404
+
         # check password
         # this is what the authenticate() function used to do 
         if not(user.confirmed):
@@ -230,3 +233,34 @@ class UserLogout(Resource):
         BLACKLIST.add(jti)
         return {'message': 'Successfully logged out.'}, 200
     
+class ChangePassword(Resource):
+    parser = reqparse.RequestParser()
+    # UPDATE USER PASSWORD
+    parser.add_argument('password', 
+        type=str,
+        required=True, 
+        help='username cannot be blank'
+    )
+    parser.add_argument('new_password', 
+        type=str,
+        required=True, 
+        help='email cannot be blank'
+    )
+    @jwt_required(refresh=True)
+    def post(self):
+        data = ChangePassword.parser.parse_args()
+        
+        user_id = get_jwt_identity()
+        user = UserModel.find_by_id(user_id)
+        
+        if not(pbkdf2_sha256.verify(data['password'], user.password)):
+            return {
+                'message': 'Your password does not matches the existing password', 
+                'error': 'invalid-password'
+                }, 401
+            
+        user.password = pbkdf2_sha256.hash(data['new_password']) 
+        
+        user.save_to_db()
+        
+        return {'message': 'Password has successfully been updated'}, 200

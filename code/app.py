@@ -22,7 +22,8 @@ from resources.user import (
     UserLogin,
     UserLogout, 
     TokenRefresh,
-    ResendConfirmation
+    ResendConfirmation,
+    ChangePassword
 )
 
 from resources.prescriptions import Prescription
@@ -84,6 +85,7 @@ api.add_resource(UserLogin, '/login')
 api.add_resource(UserLogout, '/logout')
 api.add_resource(TokenRefresh, '/refresh')
 api.add_resource(ResendConfirmation, '/resend_confirmation/<string:username>')
+api.add_resource(ChangePassword, '/change_password')
 
 api.add_resource(Prescription, '/prescription/<int:patient_id>')
 
