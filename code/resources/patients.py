@@ -85,6 +85,7 @@ class Classifier(Resource):
         return {"message": "Invalid email address"}, 422
     
 class Patient(Resource):
+    @jwt_required(refresh=True)
     def get(self, patient_id):
         patient = PatientModel.find_by_id(patient_id);
             
@@ -94,8 +95,6 @@ class Patient(Resource):
             
         user_id = get_jwt_identity()
         
-        print(patient.user_id, user_id)
-            
         if patient.user_id != user_id:
             return {"message": "You are not authorized to access this record"}, 403
         
@@ -109,3 +108,36 @@ class Patient(Resource):
             'suggested_clinic': prescription.clinic, 
             'prescription': prescription.prescription
             }
+
+class PatientPublic(Resource):
+    @classmethod
+    def get(cls, patient_id):
+        patient = PatientModel.find_by_id(patient_id)
+
+        if not(patient):
+            return {"message": "Seems like the record you are looking for does not exist. Please use a correct token ID."}, 404
+        
+        try:
+            prescription = patient.prescription[0]
+        except: 
+            return patient.json(), 200 
+        
+        return {
+            **patient.json(), 
+            'suggested_clinic': prescription.clinic, 
+            'prescription': prescription.prescription
+            }
+
+class PatientPending(Resource):
+    @jwt_required(refresh=True)
+    def get(self):
+        user_id = get_jwt_identity()
+        patients = PatientModel.find_pending_cases(user_id)
+        return {'pending_cases': list(map(lambda x: x.json(), patients))}
+    
+class PatientChecked(Resource):
+    @jwt_required(refresh=True)
+    def get(self):
+        user_id = get_jwt_identity()
+        patients = PatientModel.find_approved_cases(user_id)
+        return {'checked_cases': list(map(lambda x: x.json(), patients))}

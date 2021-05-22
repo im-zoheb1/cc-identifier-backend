@@ -1,4 +1,5 @@
 from passlib.hash import pbkdf2_sha256 # library for the password encryption
+from werkzeug.security import safe_str_cmp
 from flask_restful import Resource, reqparse
 from flask_jwt_extended import (
     create_access_token, 
@@ -99,23 +100,85 @@ class UserVerification(Resource):
         
         return {'message': 'FAILED: User not found'}, 404
 
-# endpoint for testing purposes
 class User(Resource):
-    @classmethod
-    def get(cls, user_id):
-        user = UserModel.find_by_id(user_id)
-        if not user:
-            return {'message': 'User not found'}, 404
-        return user.json()
-    
-    @classmethod
-    def delete(cls, user_id):
-        user = UserModel.find_by_id(user_id)
-        if not user:
-            return {'message': 'User not found'}, 404
-        user.delete_from_db()
-        return {'message': 'User deleted.'}, 200
+        parser = reqparse.RequestParser()
+        parser.add_argument('username', 
+            type=str,
+            required=True, 
+            help='username cannot be blank'
+        )
+        parser.add_argument('email', 
+            type=str,
+            required=True, 
+            help='email cannot be blank'
+        )
+        parser.add_argument('organization', 
+            type=str,
+            required=True, 
+            help='organization cannot be blank'
+        )
+        parser.add_argument('address', 
+            type=str,
+            required=True, 
+            help='address cannot be blank'
+        )
 
+        # GET PERSONAL INFORMATION
+        @jwt_required(refresh=True)
+        def get(self):
+            user_id = get_jwt_identity()
+            user = UserModel.find_by_id(user_id)
+            return user.json(), 200
+            
+        # UPDATE PERSONAL INFORMATION
+        @jwt_required(refresh=True)
+        def put(self):
+            data = User.parser.parse_args()
+
+            # VALIDATE EMAIL ADDRESS
+            if not(validate_email(data["email"])):
+                return {
+                    "message": "Invalid email address", 
+                    "error": "invalid-entry"
+                    }, 400
+            
+            # GET USER ID THROUGH JWT
+            user_id = get_jwt_identity()
+            user = UserModel.find_by_id(user_id)
+
+            print(data["username"], user.username)
+
+            # CHECK IF THE "USERNAME BEFORE UPDATING ARE THE SAME"
+            if safe_str_cmp(data["username"], user.username):
+                # CHECK IF THE ""EMAIIL ADDRESS IS SAME AS BEFORE""
+                if safe_str_cmp(data["email"], user.email):
+                    pass
+                # CHECK IF THE ""EMAIL ADDRESS ALERADY EXISTS""
+                elif UserModel.find_by_email(data["email"]):
+                    return {'message': 'This email address is already occupied. Please try a different one'}, 400
+            # CHECK IF THE ""USER ALREADY EXISTS""
+            elif UserModel.find_by_username(data["username"]):
+                return {'message': 'This username is already occupied. Please try a different one.'}, 400
+            
+            # VICE VERSA FOR EMAIL ADDRESS
+            if safe_str_cmp(data["email"], user.email):
+                if safe_str_cmp(data["username"], user.username):
+                    pass
+                elif UserModel.find_by_name(data["username"]):
+                    return {'message': 'This username is already occupied. Please try a different one.'}, 400
+            elif UserModel.find_by_email(data["email"]):
+                return {'message': 'This email address is already occupied. Please try a different one'}, 400 
+
+            user.username = data["username"]
+            user.email = data["email"]
+            user.organization = data["organization"]
+            user.address = data["address"]
+
+            try:
+                user.save_to_db()
+            except:
+                return 'Failed to update', 500
+            return 'Updated successfully', 200
 
 class UserLogin(Resource):
     parser = reqparse.RequestParser()

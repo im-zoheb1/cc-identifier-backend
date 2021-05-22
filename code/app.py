@@ -9,7 +9,10 @@ from blacklist import BLACKLIST
 
 from resources.patients import (
     Classifier,
-    Patient
+    Patient,
+    PatientPending,
+    PatientChecked,
+    PatientPublic
 )
 
 from resources.user import (
@@ -76,7 +79,7 @@ def token_not_fresh_callback():
  
 api.add_resource(UserRegister, '/register')
 api.add_resource(UserVerification, '/confirm/<string:token>')
-api.add_resource(User, '/user/<int:user_id>')
+api.add_resource(User, '/user')
 api.add_resource(UserLogin, '/login')
 api.add_resource(UserLogout, '/logout')
 api.add_resource(TokenRefresh, '/refresh')
@@ -86,6 +89,9 @@ api.add_resource(Prescription, '/prescription/<int:patient_id>')
 
 api.add_resource(Classifier, '/classifier')
 api.add_resource(Patient, '/patient/<string:patient_id>')
+api.add_resource(PatientPublic, '/patient_public/<string:patient_id>')
+api.add_resource(PatientPending, '/patient/pending')
+api.add_resource(PatientChecked, '/patient/checked')
 
 if __name__ == '__main__':
     from db import db

@@ -23,10 +23,10 @@ class UserModel(db.Model):
     
     def json(self):
         return {
-            'id': self.id,
             'username': self.username,
             'email': self.email,
-            'confirmed': self.confirmed,
+            'organization': self.organization,
+            'address': self.address,
         }
     
     def delete_from_db(self):

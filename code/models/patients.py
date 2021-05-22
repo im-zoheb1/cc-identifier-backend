@@ -56,3 +56,11 @@ class PatientModel(db.Model):
     @classmethod
     def find_by_status(cls, status):
         return cls.query.filder_by(status=status).all()
+    
+    @classmethod
+    def find_pending_cases(cls, user_id):
+        return cls.query.filter_by(user_id=user_id, status='pending')
+    
+    @classmethod
+    def find_approved_cases(cls, user_id):
+        return cls.query.filter_by(user_id=user_id, status='checked')
